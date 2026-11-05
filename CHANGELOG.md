@@ -1,5 +1,10 @@
 # Changelog
 
+## 2.2.0 – 2026-11-05
+
+- `sensor.*_plan` has a new attribute `forecast_slots`: the forecast slots the
+  planner is waiting for (with their forecast price), so dashboards can draw them.
+
 ## 2.1.1 – 2026-11-05
 
 - Entity ids are always English (`binary_sensor.simple_charge_charge_now`, …),

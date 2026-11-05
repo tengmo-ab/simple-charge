@@ -106,7 +106,7 @@ Prices are used in the sensor's own unit, so set the max price in that unit too.
 | Entity | Purpose |
 | --- | --- |
 | `binary_sensor.<name>_charge_now` | **On when the car should charge.** Use it in other automations if you like. Attributes: `reason`, `next_start`. |
-| `sensor.<name>_plan` | Planned charging in plain text, e.g. `5/11 23:15–00:00, 6/11 02:00–03:00`. Attributes: slots, average price, price limit, forecast slots it waits for. |
+| `sensor.<name>_plan` | Planned charging in plain text, e.g. `5/11 23:15–00:00, 6/11 02:00–03:00`. Attributes: `slots`, `forecast_slots` (what it waits for), average price, price limit. |
 | `sensor.<name>_status` | Why: charging, scheduled, waiting for a cheaper forecast, too expensive, paused, … |
 | `sensor.<name>_next_start` | When the next (or current) charging block starts. |
 | `sensor.<name>_price_limit` / `_reference_price` | The limit in use and the reference average. |

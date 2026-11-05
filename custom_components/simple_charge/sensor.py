@@ -74,6 +74,7 @@ def _plan_attrs(c: SimpleChargeCoordinator) -> dict[str, Any]:
         "average_price": _round(plan.average_price, 3),
         "price_limit": _round(plan.threshold, 3),
         "waiting_for_forecast": format_ranges(merge_ranges(waiting)) if waiting else None,
+        "forecast_slots": slot_list(waiting),
         "forecast_average_price": _round(average(waiting), 3),
         "force_window": format_ranges([plan.active_force_window]) if plan.active_force_window else None,
         "known_prices_until": c.prices[-1].end.isoformat() if c.prices else None,
@@ -159,7 +160,7 @@ async def async_setup_entry(
 
 class SimpleChargeSensor(SimpleChargeEntity, SensorEntity):
     entity_description: SimpleChargeSensorDescription
-    _unrecorded_attributes = frozenset({"slots"})
+    _unrecorded_attributes = frozenset({"slots", "forecast_slots"})
 
     def __init__(self, coordinator: SimpleChargeCoordinator, description: SimpleChargeSensorDescription) -> None:
         super().__init__(coordinator, description.key)
