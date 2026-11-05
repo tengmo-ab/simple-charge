@@ -1,5 +1,11 @@
 # Changelog
 
+## 2.1.1 – 2026-11-05
+
+- Entity ids are always English (`binary_sensor.simple_charge_charge_now`, …),
+  also when Home Assistant runs in another language. Names stay translated.
+  Existing entities keep their ids; remove and re-add the entry to get the new ones.
+
 ## 2.1.0 – 2026-11-05
 
 - New select **Ready by mode**: *Must finish (ignore price)* (as before) or
