@@ -254,6 +254,13 @@
           "force": "Charge now",
           "paused": "Paused (hands off)"
         }
+      },
+      "deadline_mode": {
+        "name": "Ready by mode",
+        "state": {
+          "must_finish": "Must finish (ignore price)",
+          "within_price_limits": "Within price limits"
+        }
       }
     },
     "datetime": {

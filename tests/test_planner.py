@@ -164,3 +164,39 @@ def test_soc_duration():
     assert abs(duration.total_seconds() / 3600 - 38.4 / 9.9) < 1e-9
     assert needed_duration_from_soc(90, 80, 64, 11) == timedelta()
     assert needed_duration_from_soc(20, 80, 64, 0) == timedelta()
+
+
+def test_deadline_within_price_limits_keeps_caps():
+    # Cheap block 01:00-02:00, expensive elsewhere, deadline 07:00.
+    prices = quarters(DAY, day_prices({4: 50, 5: 50, 6: 50, 7: 50}, base=300))
+    data = PlanInput(
+        now=DAY,
+        prices=prices,
+        duration=timedelta(hours=2),
+        max_price=85,
+        deadline=DAY + timedelta(hours=7),
+        deadline_respects_limits=True,
+    )
+    plan = make_plan(data)
+    # Only the four cheap quarters, even though 2 h was asked for.
+    assert [s.start for s in plan.slots] == [DAY + i * Q for i in (4, 5, 6, 7)]
+    data.deadline_respects_limits = False
+    assert len(make_plan(data).slots) == 8
+
+
+def test_deadline_within_limits_too_expensive_and_no_forecast():
+    prices = quarters(DAY, day_prices(base=300))
+    forecast = quarters(DAY + timedelta(days=1), [1] * 96, forecast=True)
+    plan = make_plan(
+        PlanInput(
+            now=DAY,
+            prices=prices,
+            duration=timedelta(hours=1),
+            max_price=85,
+            forecast=forecast,
+            deadline=DAY + timedelta(hours=7),
+            deadline_respects_limits=True,
+        )
+    )
+    assert plan.slots == [] and plan.waiting_for == []
+    assert plan.reason is Reason.TOO_EXPENSIVE

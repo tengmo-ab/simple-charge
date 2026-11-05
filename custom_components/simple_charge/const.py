@@ -58,6 +58,7 @@ SET_RELATIVE_LIMIT: Final = "relative_limit_pct"
 SET_USE_FORECAST: Final = "use_forecast"
 SET_DEADLINE_ENABLED: Final = "deadline_enabled"
 SET_DEADLINE: Final = "deadline"
+SET_DEADLINE_MODE: Final = "deadline_mode"
 SET_WINDOW_START: Final = "force_window_start"
 SET_WINDOW_END: Final = "force_window_end"
 SET_TARGET_SOC: Final = "target_soc"
@@ -68,6 +69,10 @@ MODE_FORCE: Final = "force"
 MODE_PAUSED: Final = "paused"
 MODES: Final = [MODE_SMART, MODE_FORCE, MODE_PAUSED]
 
+DEADLINE_STRICT: Final = "must_finish"
+DEADLINE_LIMITS: Final = "within_price_limits"
+DEADLINE_MODES: Final = [DEADLINE_STRICT, DEADLINE_LIMITS]
+
 DEFAULT_SETTINGS: Final = {
     SET_MODE: MODE_SMART,
     SET_CHARGER_CONTROL: True,
@@ -77,6 +82,7 @@ DEFAULT_SETTINGS: Final = {
     SET_USE_FORECAST: True,
     SET_DEADLINE_ENABLED: False,
     SET_DEADLINE: None,
+    SET_DEADLINE_MODE: "must_finish",
     SET_WINDOW_START: None,
     SET_WINDOW_END: None,
     SET_TARGET_SOC: 80.0,

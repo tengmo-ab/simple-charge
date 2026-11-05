@@ -254,6 +254,13 @@
           "force": "Ladda nu",
           "paused": "Pausad (rör inte laddboxen)"
         }
+      },
+      "deadline_mode": {
+        "name": "Klar senast-läge",
+        "state": {
+          "must_finish": "Måste bli klar (oavsett pris)",
+          "within_price_limits": "Inom prisgränserna"
+        }
       }
     },
     "datetime": {

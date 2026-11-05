@@ -4,7 +4,7 @@
 
 <p align="center">
   <a href="https://github.com/tengmo-ab/simple-charge/releases"><img alt="Release" src="https://img.shields.io/github/v/release/tengmo-ab/simple-charge?sort=semver"></a>
-  <a href="https://hacs.xyz"><img alt="HACS Custom" src="https://img.shields.io/badge/HACS-Custom-41BDF5.svg"></a>
+  <img alt="Marketplace / HACS custom" src="https://img.shields.io/badge/Marketplace%20%2F%20HACS-custom-41BDF5.svg">
   <img alt="Home Assistant" src="https://img.shields.io/badge/Home%20Assistant-2025.6%2B-blue">
 </p>
 
@@ -36,8 +36,13 @@ charge and why.
    If a later day is clearly cheaper, Simple Charge waits. It never charges on a
    forecast, and it stops waiting when the car has gone too long without a charge
    (default 72 h).
-5. **Ready by.** With a deadline switched on, price limits and the forecast are
-   ignored: the cheapest slots before the deadline are used, whatever they cost.
+5. **Ready by.** With a deadline switched on, only slots before the deadline are
+   used and the forecast is ignored. *Ready by mode* decides about price:
+   - **Must finish** (default) – price limits are ignored, the car is done in time
+     whatever it costs.
+   - **Within price limits** – the limits still apply. The car gets the cheap slots
+     before the deadline and may end up only partly charged. A short window before
+     the deadline also tends to keep the charging in fewer, longer blocks.
    The deadline switches itself off once it has passed.
 6. **Force window / Charge now.** A force window (or the `force_charge` action)
    charges regardless of price.
@@ -51,14 +56,21 @@ A slot that is already charging may cost a bit more (hysteresis, default 15 %)
 before it is dropped, so a small change in the reference average does not stop
 a charge halfway.
 
-## Installation (HACS custom repository)
+## Installation
 
-1. HACS → ⋮ → **Custom repositories** → add `https://github.com/tengmo-ab/simple-charge`,
-   type **Integration**.
+**Home Assistant 2026.11 and later (built-in Marketplace)**
+
+1. Settings → **Marketplace** → add a custom repository:
+   `https://github.com/tengmo-ab/simple-charge`, category **Integration**
+   (adding custom repositories needs the Marketplace's GitHub connection, and the
+   repository must be public).
 2. Install **Simple Charge** and restart Home Assistant.
 3. **Settings → Devices & services → Add integration → Simple Charge.**
 
-HACS shows the release version (for example `2.0.0`), taken from the GitHub releases.
+**Older versions with HACS:** HACS → ⋮ → **Custom repositories**, same URL, type
+**Integration**, then install and restart.
+
+Both show the release version (for example `2.1.0`), taken from the GitHub releases.
 
 Manual install: copy `custom_components/simple_charge` into your
 `config/custom_components/` folder and restart.
@@ -105,6 +117,7 @@ Prices are used in the sensor's own unit, so set the max price in that unit too.
 | `number.<name>_charging_time` | Hours to charge per plan. |
 | `number.<name>_max_price` / `_relative_limit` | Price limits (0 = off). |
 | `switch.<name>_ready_by` + `datetime.<name>_ready_by_time` | Finish before a time. |
+| `select.<name>_ready_by_mode` | *Must finish* or *Within price limits*. |
 | `datetime.<name>_force_window_start` / `_end` | Always charge inside this window. |
 | `switch.<name>_use_price_forecast` | Only when forecast sensors are set up. |
 | `number.<name>_target_battery_level` | Only when battery level and size are set up. |

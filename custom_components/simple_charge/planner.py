@@ -9,9 +9,11 @@ average), and pick the cheapest of them until the duration is covered. If a
 price forecast for the following days is available, forecast slots join the
 competition with a safety margin added to their price: when the forecast says a
 later day is clearly cheaper, the known slots lose and we wait. Only known
-slots are ever charged. A deadline ("ready by") overrides the price caps and
-the forecast: then the cheapest slots before the deadline are used, whatever
-they cost. A force window always charges.
+slots are ever charged. A deadline ("ready by") only allows slots before it and
+turns the forecast off. In the default "must finish" mode it also ignores the
+price caps, so the car is done in time whatever it costs; in "within price
+limits" mode the caps still apply and the car may end up only partly charged.
+A force window always charges.
 """
 
 from __future__ import annotations
@@ -64,6 +66,7 @@ class PlanInput:
     relative_limit_pct: float | None = None
     reference_price: float | None = None
     deadline: datetime | None = None
+    deadline_respects_limits: bool = False
     force_windows: list[tuple[datetime, datetime]] = field(default_factory=list)
     currently_charging: bool = False
     hysteresis_pct: float = 15.0
@@ -143,24 +146,24 @@ def make_plan(data: PlanInput) -> Plan:
 
     plan = Plan(charge_now=False, reason=Reason.NOTHING_NEEDED, threshold=threshold)
 
+    def cheap_enough(slot: PriceSlot) -> bool:
+        if threshold is None:
+            return True
+        limit = threshold
+        if data.currently_charging and slot.contains(now):
+            # Do not stop half way through a slot because the
+            # reference average moved a little.
+            limit = threshold * (1 + data.hysteresis_pct / 100.0)
+        return slot.price <= limit
+
     if data.duration > timedelta() and future:
         if data.deadline is not None:
-            # "Ready by": price caps and forecast do not apply, the car must be done.
-            candidates = [s for s in future if s.start < data.deadline]
+            # "Ready by": only slots before the deadline, no forecast. Price caps
+            # apply only in the "within price limits" mode.
+            candidates = [s for s in future if s.start < data.deadline and (not data.deadline_respects_limits or cheap_enough(s))]
             chosen = _pick_cheapest(candidates, data.duration)
             plan.slots = sorted(chosen, key=lambda s: s.start)
         else:
-
-            def cheap_enough(slot: PriceSlot) -> bool:
-                if threshold is None:
-                    return True
-                limit = threshold
-                if data.currently_charging and slot.contains(now):
-                    # Do not stop half way through a slot because the
-                    # reference average moved a little.
-                    limit = threshold * (1 + data.hysteresis_pct / 100.0)
-                return slot.price <= limit
-
             candidates = [s for s in future if cheap_enough(s)]
 
             pool = list(candidates)

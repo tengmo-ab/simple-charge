@@ -1,5 +1,13 @@
 # Changelog
 
+## 2.1.0 – 2026-11-05
+
+- New select **Ready by mode**: *Must finish (ignore price)* (as before) or
+  *Within price limits*, which only uses slots before the deadline that are also
+  below the max price / relative limit. The car may then end up only partly
+  charged, but never at an expensive price.
+- Tested on Home Assistant 2026.11 and its built-in Marketplace.
+
 ## 2.0.0 – 2026-11-05
 
 First release as a Home Assistant integration (version 1 was a template
