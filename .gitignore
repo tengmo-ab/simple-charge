@@ -1,0 +1,13 @@
+__pycache__/
+*.pyc
+.venv/
+.pytest_cache/
+.ruff_cache/
+.vscode/
+.idea/
+.claude/
+*.log
+.env
+secrets*.yaml
+secrets*.json
+*.local.md

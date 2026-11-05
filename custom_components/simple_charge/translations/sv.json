@@ -1,0 +1,302 @@
+{
+  "config": {
+    "step": {
+      "prices": {
+        "title": "Priser",
+        "description": "Välj sensor(er) med dagens och morgondagens priser (Nord Pool, ENTSO-e, Energi Data Service, egna templates eller den officiella Nord Pool-integrationen). Prognossensorer med samma slags lista är valfria.",
+        "data": {
+          "name": "Namn",
+          "price_entities": "Prissensorer",
+          "forecast_entities": "Prisprognos-sensorer (valfritt)",
+          "reference_entity": "Referens-snittpris (valfritt)"
+        },
+        "data_description": {
+          "price_entities": "Sensorer med en prislista som attribut (t.ex. raw_today/raw_tomorrow eller data). Flera sensorer slås ihop.",
+          "forecast_entities": "Används för att vänta in en tydligt billigare dag. Prognostider laddas aldrig, de jämförs bara.",
+          "reference_entity": "Den relativa prisgränsen är en andel av detta värde. Utan den används ett eget rullande snitt av prissensorn."
+        }
+      },
+      "charger": {
+        "title": "Laddbox",
+        "description": "Hur ska Simple Charge starta och stoppa laddboxen? Välj 'Bara planera' om du vill använda sensorn Ladda nu i egna automationer.",
+        "data": {
+          "control_type": "Styrning"
+        }
+      },
+      "charger_details": {
+        "title": "Laddboxens entiteter",
+        "data": {
+          "switch_entity": "Laddbox-switch",
+          "select_entity": "Laddboxens läges-select",
+          "start_script": "Startskript",
+          "stop_script": "Stoppskript",
+          "limiter_switch": "Strömbegränsnings-switch (valfritt)"
+        },
+        "data_description": {
+          "limiter_switch": "Stängs av innan laddning startar och slås på igen när den slutar (t.ex. Garos strömbegränsning)."
+        }
+      },
+      "select_options": {
+        "title": "Select-lägen",
+        "description": "Vilket läge laddar, och vilket betyder 'inte nu'? För Garo: ALWAYS_ON och SCHEMA.",
+        "data": {
+          "select_on_option": "Läge som laddar",
+          "select_off_option": "Läge som stoppar"
+        }
+      },
+      "advanced": {
+        "title": "Finjustering (valfritt)",
+        "description": "Standardvärdena passar de flesta. Batterinivå och Garo-schema är valfria.",
+        "data": {
+          "hysteresis_pct": "Hysteres",
+          "forecast_margin_pct": "Säkerhetsmarginal för prognos",
+          "max_wait_hours": "Vänta aldrig längre än",
+          "reference_days": "Dagar i eget referenssnitt",
+          "soc_entity": "Bilens batterinivå-sensor",
+          "battery_kwh": "Användbar batteristorlek",
+          "charger_kw": "Laddeffekt",
+          "efficiency_pct": "Laddverkningsgrad",
+          "garo_schedule_entity": "Garo schema-sensor",
+          "garo_charge_limit": "Ström i Garo-schemat",
+          "nordpool_area": "Nord Pool-område (bara officiella integrationen)"
+        },
+        "data_description": {
+          "hysteresis_pct": "En pågående laddtid får kosta så här mycket mer än gränsen innan den avbryts.",
+          "forecast_margin_pct": "Prognospriser görs så här mycket dyrare innan jämförelsen, så bara en tydligt billigare dag får den att vänta.",
+          "max_wait_hours": "Efter så här lång tid utan laddning ignoreras prognosen och de billigaste kända tiderna används.",
+          "soc_entity": "Med batterinivå, storlek och effekt ifyllda räknas laddtiden från målnivån i stället för den fasta tiden.",
+          "garo_schedule_entity": "Skriver planen till Garo-boxens eget schema (garo_wallbox-integrationen) så den laddar även om wifi tappas. Simple Charge äger då schemat."
+        }
+      }
+    },
+    "error": {
+      "no_prices": "Ingen av sensorerna har en prislista som Simple Charge förstår.",
+      "script_required": "Välj minst ett skript.",
+      "same_option": "De två lägena måste vara olika."
+    },
+    "abort": {
+      "already_configured": "Redan konfigurerad"
+    }
+  },
+  "options": {
+    "step": {
+      "prices": {
+        "title": "Priser",
+        "description": "Välj sensor(er) med dagens och morgondagens priser (Nord Pool, ENTSO-e, Energi Data Service, egna templates eller den officiella Nord Pool-integrationen). Prognossensorer med samma slags lista är valfria.",
+        "data": {
+          "price_entities": "Prissensorer",
+          "forecast_entities": "Prisprognos-sensorer (valfritt)",
+          "reference_entity": "Referens-snittpris (valfritt)"
+        },
+        "data_description": {
+          "price_entities": "Sensorer med en prislista som attribut (t.ex. raw_today/raw_tomorrow eller data). Flera sensorer slås ihop.",
+          "forecast_entities": "Används för att vänta in en tydligt billigare dag. Prognostider laddas aldrig, de jämförs bara.",
+          "reference_entity": "Den relativa prisgränsen är en andel av detta värde. Utan den används ett eget rullande snitt av prissensorn."
+        }
+      },
+      "charger": {
+        "title": "Laddbox",
+        "description": "Hur ska Simple Charge starta och stoppa laddboxen? Välj 'Bara planera' om du vill använda sensorn Ladda nu i egna automationer.",
+        "data": {
+          "control_type": "Styrning"
+        }
+      },
+      "charger_details": {
+        "title": "Laddboxens entiteter",
+        "data": {
+          "switch_entity": "Laddbox-switch",
+          "select_entity": "Laddboxens läges-select",
+          "start_script": "Startskript",
+          "stop_script": "Stoppskript",
+          "limiter_switch": "Strömbegränsnings-switch (valfritt)"
+        },
+        "data_description": {
+          "limiter_switch": "Stängs av innan laddning startar och slås på igen när den slutar (t.ex. Garos strömbegränsning)."
+        }
+      },
+      "select_options": {
+        "title": "Select-lägen",
+        "description": "Vilket läge laddar, och vilket betyder 'inte nu'? För Garo: ALWAYS_ON och SCHEMA.",
+        "data": {
+          "select_on_option": "Läge som laddar",
+          "select_off_option": "Läge som stoppar"
+        }
+      },
+      "advanced": {
+        "title": "Finjustering (valfritt)",
+        "description": "Standardvärdena passar de flesta. Batterinivå och Garo-schema är valfria.",
+        "data": {
+          "hysteresis_pct": "Hysteres",
+          "forecast_margin_pct": "Säkerhetsmarginal för prognos",
+          "max_wait_hours": "Vänta aldrig längre än",
+          "reference_days": "Dagar i eget referenssnitt",
+          "soc_entity": "Bilens batterinivå-sensor",
+          "battery_kwh": "Användbar batteristorlek",
+          "charger_kw": "Laddeffekt",
+          "efficiency_pct": "Laddverkningsgrad",
+          "garo_schedule_entity": "Garo schema-sensor",
+          "garo_charge_limit": "Ström i Garo-schemat",
+          "nordpool_area": "Nord Pool-område (bara officiella integrationen)"
+        },
+        "data_description": {
+          "hysteresis_pct": "En pågående laddtid får kosta så här mycket mer än gränsen innan den avbryts.",
+          "forecast_margin_pct": "Prognospriser görs så här mycket dyrare innan jämförelsen, så bara en tydligt billigare dag får den att vänta.",
+          "max_wait_hours": "Efter så här lång tid utan laddning ignoreras prognosen och de billigaste kända tiderna används.",
+          "soc_entity": "Med batterinivå, storlek och effekt ifyllda räknas laddtiden från målnivån i stället för den fasta tiden.",
+          "garo_schedule_entity": "Skriver planen till Garo-boxens eget schema (garo_wallbox-integrationen) så den laddar även om wifi tappas. Simple Charge äger då schemat."
+        }
+      }
+    },
+    "error": {
+      "no_prices": "Ingen av sensorerna har en prislista som Simple Charge förstår.",
+      "script_required": "Välj minst ett skript.",
+      "same_option": "De två lägena måste vara olika."
+    }
+  },
+  "selector": {
+    "control_type": {
+      "options": {
+        "none": "Bara planera (använd Ladda nu-sensorn själv)",
+        "switch": "En switch slår på/av laddning",
+        "select": "En läges-select (t.ex. Garo ALWAYS_ON / SCHEMA)",
+        "script": "Egna start- och stoppskript"
+      }
+    }
+  },
+  "entity": {
+    "binary_sensor": {
+      "charge_now": {
+        "name": "Ladda nu",
+        "state_attributes": {
+          "reason": {
+            "name": "Orsak"
+          },
+          "next_start": {
+            "name": "Nästa start"
+          }
+        }
+      }
+    },
+    "sensor": {
+      "plan": {
+        "name": "Plan"
+      },
+      "status": {
+        "name": "Status",
+        "state": {
+          "paused": "Pausad (rör inte laddboxen)",
+          "forced": "Tvingad laddning",
+          "force_window": "I tvingat intervall",
+          "charging": "Laddar (billig tid)",
+          "scheduled": "Planerad",
+          "waiting_for_forecast": "Väntar på billigare prognos",
+          "too_expensive": "För dyrt",
+          "no_prices": "Inga priser",
+          "nothing_needed": "Inget behov"
+        }
+      },
+      "next_start": {
+        "name": "Nästa start"
+      },
+      "price_limit": {
+        "name": "Prisgräns"
+      },
+      "reference_price": {
+        "name": "Referenspris"
+      },
+      "needed_duration": {
+        "name": "Behövd laddtid"
+      },
+      "charger": {
+        "name": "Laddbox-kommando",
+        "state": {
+          "idle": "Vilar",
+          "ok": "Bekräftad",
+          "pending": "Försöker igen",
+          "unavailable": "Laddbox offline",
+          "failed": "Misslyckades"
+        }
+      }
+    },
+    "number": {
+      "duration": {
+        "name": "Laddtid"
+      },
+      "max_price": {
+        "name": "Maxpris"
+      },
+      "relative_limit": {
+        "name": "Relativ gräns"
+      },
+      "target_soc": {
+        "name": "Mål-batterinivå"
+      }
+    },
+    "switch": {
+      "charger_control": {
+        "name": "Styr laddbox"
+      },
+      "deadline_enabled": {
+        "name": "Klar senast"
+      },
+      "use_forecast": {
+        "name": "Använd prisprognos"
+      },
+      "garo_schedule_sync": {
+        "name": "Skriv Garo-schema"
+      }
+    },
+    "select": {
+      "mode": {
+        "name": "Läge",
+        "state": {
+          "smart": "Smart (billigaste priser)",
+          "force": "Ladda nu",
+          "paused": "Pausad (rör inte laddboxen)"
+        }
+      }
+    },
+    "datetime": {
+      "deadline": {
+        "name": "Klar senast tid"
+      },
+      "force_window_start": {
+        "name": "Tvingat intervall start"
+      },
+      "force_window_end": {
+        "name": "Tvingat intervall slut"
+      }
+    }
+  },
+  "services": {
+    "force_charge": {
+      "name": "Tvinga laddning",
+      "description": "Ladda från nu en stund, oavsett pris.",
+      "fields": {
+        "duration": {
+          "name": "Längd",
+          "description": "Hur länge det ska laddas."
+        },
+        "config_entry_id": {
+          "name": "Planerare",
+          "description": "Bara denna Simple Charge-post (standard: alla)."
+        }
+      }
+    },
+    "clear_force": {
+      "name": "Avbryt tvingad laddning",
+      "description": "Ta bort det tvingade intervallet.",
+      "fields": {
+        "config_entry_id": {
+          "name": "Planerare",
+          "description": "Bara denna Simple Charge-post (standard: alla)."
+        }
+      }
+    }
+  },
+  "exceptions": {
+    "no_entry": {
+      "message": "Ingen laddad Simple Charge-post hittades."
+    }
+  }
+}

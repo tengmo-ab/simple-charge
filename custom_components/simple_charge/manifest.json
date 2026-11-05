@@ -1,0 +1,13 @@
+{
+  "domain": "simple_charge",
+  "name": "Simple Charge",
+  "codeowners": ["@tengmo-ab"],
+  "config_flow": true,
+  "dependencies": [],
+  "documentation": "https://github.com/tengmo-ab/simple-charge",
+  "integration_type": "service",
+  "iot_class": "calculated",
+  "issue_tracker": "https://github.com/tengmo-ab/simple-charge/issues",
+  "requirements": [],
+  "version": "2.0.0"
+}

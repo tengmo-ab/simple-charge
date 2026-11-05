@@ -1,0 +1,14 @@
+[tool.ruff]
+line-length = 130
+target-version = "py313"
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I", "B", "UP"]
+
+[tool.ruff.lint.isort]
+known-first-party = ["simple_charge"]
+force-sort-within-sections = true
+combine-as-imports = true
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]

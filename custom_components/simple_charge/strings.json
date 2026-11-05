@@ -1,0 +1,302 @@
+{
+  "config": {
+    "step": {
+      "prices": {
+        "title": "Prices",
+        "description": "Pick the sensor(s) that hold today's and tomorrow's prices (Nord Pool, ENTSO-e, Energi Data Service, Tibber-style templates or the official Nord Pool integration). Forecast sensors with the same kind of list are optional.",
+        "data": {
+          "name": "Name",
+          "price_entities": "Price sensors",
+          "forecast_entities": "Price forecast sensors (optional)",
+          "reference_entity": "Reference average price (optional)"
+        },
+        "data_description": {
+          "price_entities": "Sensors with a price list attribute (for example raw_today/raw_tomorrow or data). Several sensors are merged.",
+          "forecast_entities": "Used to wait for a clearly cheaper day. Forecast slots are never charged, only compared.",
+          "reference_entity": "The relative price limit is a share of this value. Without it Simple Charge uses its own rolling average of the price sensor."
+        }
+      },
+      "charger": {
+        "title": "Charger",
+        "description": "How should Simple Charge start and stop the charger? Choose 'Only plan' if you want to use the Charge now sensor in your own automations.",
+        "data": {
+          "control_type": "Control"
+        }
+      },
+      "charger_details": {
+        "title": "Charger entities",
+        "data": {
+          "switch_entity": "Charger switch",
+          "select_entity": "Charger mode select",
+          "start_script": "Start script",
+          "stop_script": "Stop script",
+          "limiter_switch": "Current limiter switch (optional)"
+        },
+        "data_description": {
+          "limiter_switch": "Turned off before charging starts and back on when it stops (for example a Garo charge limiter)."
+        }
+      },
+      "select_options": {
+        "title": "Select options",
+        "description": "Which option charges, and which option means 'not now'? For Garo: ALWAYS_ON and SCHEMA.",
+        "data": {
+          "select_on_option": "Option that charges",
+          "select_off_option": "Option that stops"
+        }
+      },
+      "advanced": {
+        "title": "Fine tuning (optional)",
+        "description": "The defaults work for most people. Battery level and Garo schedule are optional.",
+        "data": {
+          "hysteresis_pct": "Hysteresis",
+          "forecast_margin_pct": "Forecast safety margin",
+          "max_wait_hours": "Never wait longer than",
+          "reference_days": "Days in own reference average",
+          "soc_entity": "Car battery level sensor",
+          "battery_kwh": "Usable battery size",
+          "charger_kw": "Charging power",
+          "efficiency_pct": "Charging efficiency",
+          "garo_schedule_entity": "Garo schedule sensor",
+          "garo_charge_limit": "Garo schedule current",
+          "nordpool_area": "Nord Pool area (official integration only)"
+        },
+        "data_description": {
+          "hysteresis_pct": "A slot that is already charging may cost this much more than the limit before it stops.",
+          "forecast_margin_pct": "Forecast prices are made this much more expensive before they are compared, so only a clearly cheaper day makes it wait.",
+          "max_wait_hours": "After this long without a charge the forecast is ignored and the cheapest known slots are used.",
+          "soc_entity": "With battery level, size and power set, the charging time is calculated from the target level instead of the fixed duration.",
+          "garo_schedule_entity": "Writes the plan into the Garo box's own schedule (garo_wallbox integration), so it still charges when Wi-Fi drops. Simple Charge then owns that schedule."
+        }
+      }
+    },
+    "error": {
+      "no_prices": "None of these sensors has a price list Simple Charge understands.",
+      "script_required": "Pick at least one script.",
+      "same_option": "The two options must differ."
+    },
+    "abort": {
+      "already_configured": "Already configured"
+    }
+  },
+  "options": {
+    "step": {
+      "prices": {
+        "title": "Prices",
+        "description": "Pick the sensor(s) that hold today's and tomorrow's prices (Nord Pool, ENTSO-e, Energi Data Service, Tibber-style templates or the official Nord Pool integration). Forecast sensors with the same kind of list are optional.",
+        "data": {
+          "price_entities": "Price sensors",
+          "forecast_entities": "Price forecast sensors (optional)",
+          "reference_entity": "Reference average price (optional)"
+        },
+        "data_description": {
+          "price_entities": "Sensors with a price list attribute (for example raw_today/raw_tomorrow or data). Several sensors are merged.",
+          "forecast_entities": "Used to wait for a clearly cheaper day. Forecast slots are never charged, only compared.",
+          "reference_entity": "The relative price limit is a share of this value. Without it Simple Charge uses its own rolling average of the price sensor."
+        }
+      },
+      "charger": {
+        "title": "Charger",
+        "description": "How should Simple Charge start and stop the charger? Choose 'Only plan' if you want to use the Charge now sensor in your own automations.",
+        "data": {
+          "control_type": "Control"
+        }
+      },
+      "charger_details": {
+        "title": "Charger entities",
+        "data": {
+          "switch_entity": "Charger switch",
+          "select_entity": "Charger mode select",
+          "start_script": "Start script",
+          "stop_script": "Stop script",
+          "limiter_switch": "Current limiter switch (optional)"
+        },
+        "data_description": {
+          "limiter_switch": "Turned off before charging starts and back on when it stops (for example a Garo charge limiter)."
+        }
+      },
+      "select_options": {
+        "title": "Select options",
+        "description": "Which option charges, and which option means 'not now'? For Garo: ALWAYS_ON and SCHEMA.",
+        "data": {
+          "select_on_option": "Option that charges",
+          "select_off_option": "Option that stops"
+        }
+      },
+      "advanced": {
+        "title": "Fine tuning (optional)",
+        "description": "The defaults work for most people. Battery level and Garo schedule are optional.",
+        "data": {
+          "hysteresis_pct": "Hysteresis",
+          "forecast_margin_pct": "Forecast safety margin",
+          "max_wait_hours": "Never wait longer than",
+          "reference_days": "Days in own reference average",
+          "soc_entity": "Car battery level sensor",
+          "battery_kwh": "Usable battery size",
+          "charger_kw": "Charging power",
+          "efficiency_pct": "Charging efficiency",
+          "garo_schedule_entity": "Garo schedule sensor",
+          "garo_charge_limit": "Garo schedule current",
+          "nordpool_area": "Nord Pool area (official integration only)"
+        },
+        "data_description": {
+          "hysteresis_pct": "A slot that is already charging may cost this much more than the limit before it stops.",
+          "forecast_margin_pct": "Forecast prices are made this much more expensive before they are compared, so only a clearly cheaper day makes it wait.",
+          "max_wait_hours": "After this long without a charge the forecast is ignored and the cheapest known slots are used.",
+          "soc_entity": "With battery level, size and power set, the charging time is calculated from the target level instead of the fixed duration.",
+          "garo_schedule_entity": "Writes the plan into the Garo box's own schedule (garo_wallbox integration), so it still charges when Wi-Fi drops. Simple Charge then owns that schedule."
+        }
+      }
+    },
+    "error": {
+      "no_prices": "None of these sensors has a price list Simple Charge understands.",
+      "script_required": "Pick at least one script.",
+      "same_option": "The two options must differ."
+    }
+  },
+  "selector": {
+    "control_type": {
+      "options": {
+        "none": "Only plan (use the Charge now sensor yourself)",
+        "switch": "A switch turns charging on/off",
+        "select": "A mode select (for example Garo ALWAYS_ON / SCHEMA)",
+        "script": "My own start and stop scripts"
+      }
+    }
+  },
+  "entity": {
+    "binary_sensor": {
+      "charge_now": {
+        "name": "Charge now",
+        "state_attributes": {
+          "reason": {
+            "name": "Reason"
+          },
+          "next_start": {
+            "name": "Next start"
+          }
+        }
+      }
+    },
+    "sensor": {
+      "plan": {
+        "name": "Plan"
+      },
+      "status": {
+        "name": "Status",
+        "state": {
+          "paused": "Paused (hands off)",
+          "forced": "Forced on",
+          "force_window": "In force window",
+          "charging": "Charging (cheap slot)",
+          "scheduled": "Scheduled",
+          "waiting_for_forecast": "Waiting for cheaper forecast",
+          "too_expensive": "Too expensive",
+          "no_prices": "No prices",
+          "nothing_needed": "Nothing to charge"
+        }
+      },
+      "next_start": {
+        "name": "Next start"
+      },
+      "price_limit": {
+        "name": "Price limit"
+      },
+      "reference_price": {
+        "name": "Reference price"
+      },
+      "needed_duration": {
+        "name": "Needed charging time"
+      },
+      "charger": {
+        "name": "Charger command",
+        "state": {
+          "idle": "Idle",
+          "ok": "Confirmed",
+          "pending": "Retrying",
+          "unavailable": "Charger offline",
+          "failed": "Failed"
+        }
+      }
+    },
+    "number": {
+      "duration": {
+        "name": "Charging time"
+      },
+      "max_price": {
+        "name": "Max price"
+      },
+      "relative_limit": {
+        "name": "Relative limit"
+      },
+      "target_soc": {
+        "name": "Target battery level"
+      }
+    },
+    "switch": {
+      "charger_control": {
+        "name": "Control charger"
+      },
+      "deadline_enabled": {
+        "name": "Ready by"
+      },
+      "use_forecast": {
+        "name": "Use price forecast"
+      },
+      "garo_schedule_sync": {
+        "name": "Write Garo schedule"
+      }
+    },
+    "select": {
+      "mode": {
+        "name": "Mode",
+        "state": {
+          "smart": "Smart (cheapest prices)",
+          "force": "Charge now",
+          "paused": "Paused (hands off)"
+        }
+      }
+    },
+    "datetime": {
+      "deadline": {
+        "name": "Ready by time"
+      },
+      "force_window_start": {
+        "name": "Force window start"
+      },
+      "force_window_end": {
+        "name": "Force window end"
+      }
+    }
+  },
+  "services": {
+    "force_charge": {
+      "name": "Force charge",
+      "description": "Charge from now for a while, whatever the price.",
+      "fields": {
+        "duration": {
+          "name": "Duration",
+          "description": "How long to charge."
+        },
+        "config_entry_id": {
+          "name": "Planner",
+          "description": "Only this Simple Charge entry (default: all)."
+        }
+      }
+    },
+    "clear_force": {
+      "name": "Clear force charge",
+      "description": "Remove the force window.",
+      "fields": {
+        "config_entry_id": {
+          "name": "Planner",
+          "description": "Only this Simple Charge entry (default: all)."
+        }
+      }
+    }
+  },
+  "exceptions": {
+    "no_entry": {
+      "message": "No loaded Simple Charge entry found."
+    }
+  }
+}

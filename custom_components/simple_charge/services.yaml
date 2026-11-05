@@ -1,0 +1,17 @@
+force_charge:
+  fields:
+    duration:
+      default:
+        hours: 1
+      selector:
+        duration:
+    config_entry_id:
+      selector:
+        config_entry:
+          integration: simple_charge
+clear_force:
+  fields:
+    config_entry_id:
+      selector:
+        config_entry:
+          integration: simple_charge
