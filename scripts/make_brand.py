@@ -80,9 +80,7 @@ def logo(icon_img: Image.Image, height: int) -> Image.Image:
     pad = int(height * 0.18)
     out = Image.new("RGBA", (height + pad + tw + 4, height), (0, 0, 0, 0))
     out.paste(ic, (0, 0), ic)
-    ImageDraw.Draw(out).text(
-        (height + pad - box[0], (height - th) // 2 - box[1]), text, font=font, fill=BOTTOM + (255,)
-    )
+    ImageDraw.Draw(out).text((height + pad - box[0], (height - th) // 2 - box[1]), text, font=font, fill=BOTTOM + (255,))
     return out
 
 
