@@ -1,5 +1,17 @@
 # Changelog
 
+## 2.3.0 – 2026-11-07
+
+- **Fix:** a fixed charging time is now per round. Time already charged is booked and
+  not planned again, so "2 h" means 2 h. Before, the plan was re-made every quarter
+  with the full 2 h still to go, so it slid forward and kept the charger on much
+  longer than asked (seen live: on 00:30–03:30 instead of the eight planned quarters).
+- A round ends after 6 h without charging; the next one starts with the full time.
+  With a battery level sensor nothing changes (the car's level already says what is left).
+- `sensor.*_needed_charging_time` now shows the time still needed in this round, with
+  attributes `total_hours`, `charged_this_round_hours`, `round_last_charging` and
+  `from_battery_level`.
+
 ## 2.2.0 – 2026-11-05
 
 - `sensor.*_plan` has a new attribute `forecast_slots`: the forecast slots the

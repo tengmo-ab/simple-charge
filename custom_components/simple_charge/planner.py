@@ -206,6 +206,47 @@ def make_plan(data: PlanInput) -> Plan:
     return plan
 
 
+ROUND_RESET_GAP = timedelta(hours=6)
+ROUND_MAX_STEP = timedelta(minutes=5)
+ROUND_MIN_REMAINING = timedelta(minutes=1)
+
+
+@dataclass(slots=True)
+class ChargeRound:
+    """Charging time already given in the current round.
+
+    A fixed charging time (say 2 h) is what the car needs per round, not "2 h from
+    now, re-planned every quarter". Without this the plan slides: each quarter that
+    charges is replaced by a new one, so the charger stays on far longer than asked.
+
+    The time is booked as it happens. A round ends when nothing has charged for
+    ``ROUND_RESET_GAP``; the next round then starts with the full time again. One
+    booking step is capped so a restart or a stalled update cannot add hours.
+    """
+
+    charged: timedelta = field(default_factory=timedelta)
+    last_tick: datetime | None = None
+    last_charging: datetime | None = None
+
+    def advance(self, now: datetime, charging: bool) -> None:
+        """Book the time since the previous call. ``charging`` is the decision made then."""
+        if charging:
+            if self.last_tick is not None and now > self.last_tick:
+                self.charged += min(now - self.last_tick, ROUND_MAX_STEP)
+            self.last_charging = now
+        elif self.last_charging is not None and now - self.last_charging >= ROUND_RESET_GAP:
+            self.reset()
+        self.last_tick = now
+
+    def reset(self) -> None:
+        self.charged = timedelta()
+        self.last_charging = None
+
+    def remaining(self, duration: timedelta) -> timedelta:
+        left = duration - self.charged
+        return left if left >= ROUND_MIN_REMAINING else timedelta()
+
+
 def merge_ranges(slots: list[PriceSlot], extra: list[tuple[datetime, datetime]] | None = None) -> list[tuple[datetime, datetime]]:
     """Join touching or overlapping intervals into ranges, sorted by start."""
     intervals = sorted([(s.start, s.end) for s in slots] + list(extra or []))

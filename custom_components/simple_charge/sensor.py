@@ -84,6 +84,15 @@ def _plan_attrs(c: SimpleChargeCoordinator) -> dict[str, Any]:
     }
 
 
+def _duration_attrs(c: SimpleChargeCoordinator) -> dict[str, Any]:
+    return {
+        "total_hours": round(c.duration.total_seconds() / 3600, 3),
+        "charged_this_round_hours": None if c.duration_from_soc else round(c.round.charged.total_seconds() / 3600, 3),
+        "round_last_charging": c.round.last_charging.isoformat() if c.round.last_charging else None,
+        "from_battery_level": c.duration_from_soc,
+    }
+
+
 def _charger_attrs(c: SimpleChargeCoordinator) -> dict[str, Any]:
     attrs: dict[str, Any] = {
         "control_type": c.charger.control_type,
@@ -136,7 +145,8 @@ SENSORS: tuple[SimpleChargeSensorDescription, ...] = (
         device_class=SensorDeviceClass.DURATION,
         native_unit_of_measurement=UnitOfTime.HOURS,
         suggested_display_precision=2,
-        value_fn=lambda c: round(c.duration.total_seconds() / 3600, 3),
+        value_fn=lambda c: round(c.remaining.total_seconds() / 3600, 3),
+        attrs_fn=_duration_attrs,
     ),
     SimpleChargeSensorDescription(
         key="charger",

@@ -23,6 +23,9 @@ charge and why.
 1. **Charging time.** You set how many hours the car should get (for example 2 h).
    If you add a battery level sensor, battery size and charger power, the time is
    calculated from the car's level and your target instead.
+   A fixed time is per round: time already charged counts, so 2 h means 2 h in
+   total. A round ends after 6 h without charging, and the next one starts again
+   with the full time.
 2. **Cheap enough?** A slot may be used if it is at or below both limits you
    turned on:
    - **Max price** – a fixed cap (0 = off).

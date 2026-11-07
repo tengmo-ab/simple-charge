@@ -61,6 +61,7 @@ from .const import (
 )
 from .garo_schedule import GaroScheduleSync
 from .planner import (
+    ChargeRound,
     Plan,
     PlanInput,
     PriceSlot,
@@ -113,6 +114,11 @@ class SimpleChargeCoordinator(DataUpdateCoordinator[Plan]):
         self.forecast: list[PriceSlot] = []
         self.reference_price: float | None = None
         self.duration: timedelta = timedelta()
+        # Charging time still needed in this round (``duration`` minus what was
+        # already charged). Equal to ``duration`` when it comes from the battery level.
+        self.remaining: timedelta = timedelta()
+        self.duration_from_soc = False
+        self.round = ChargeRound()
         self.soc: float | None = None
         self.unit: str | None = None
 
@@ -140,6 +146,11 @@ class SimpleChargeCoordinator(DataUpdateCoordinator[Plan]):
         self.daily_averages = dict(stored.get("daily_averages", {}))
         if stored.get("last_charge_end"):
             self.last_charge_end = dt_util.parse_datetime(stored["last_charge_end"])
+        saved_round = stored.get("round") or {}
+        self.round.charged = timedelta(seconds=float(saved_round.get("charged_s") or 0))
+        for key in ("last_tick", "last_charging"):
+            if saved_round.get(key):
+                setattr(self.round, key, dt_util.parse_datetime(saved_round[key]))
 
     @callback
     def _data_to_store(self) -> dict[str, Any]:
@@ -148,6 +159,11 @@ class SimpleChargeCoordinator(DataUpdateCoordinator[Plan]):
             "settings": settings,
             "daily_averages": self.daily_averages,
             "last_charge_end": self.last_charge_end.isoformat() if self.last_charge_end else None,
+            "round": {
+                "charged_s": round(self.round.charged.total_seconds(), 1),
+                "last_tick": self.round.last_tick.isoformat() if self.round.last_tick else None,
+                "last_charging": self.round.last_charging.isoformat() if self.round.last_charging else None,
+            },
         }
 
     def _save(self) -> None:
@@ -313,7 +329,8 @@ class SimpleChargeCoordinator(DataUpdateCoordinator[Plan]):
         self.soc = self._state_float(self.options.get(CONF_SOC_ENTITY))
         battery = float(self.options.get(CONF_BATTERY_KWH) or 0)
         power = float(self.options.get(CONF_CHARGER_KW) or 0)
-        if self.soc is not None and battery > 0 and power > 0:
+        self.duration_from_soc = self.soc is not None and battery > 0 and power > 0
+        if self.duration_from_soc:
             self.duration = needed_duration_from_soc(
                 self.soc,
                 float(self.settings.get(SET_TARGET_SOC) or 0),
@@ -331,6 +348,13 @@ class SimpleChargeCoordinator(DataUpdateCoordinator[Plan]):
         await self._collect_prices()
         self._update_reference(now)
         self._update_duration()
+        # Book the charging since the last update before planning the rest. With a
+        # battery level sensor the car's level already says what is left.
+        charged_before = self.round.charged
+        self.round.advance(now, bool(self._last_charge_now))
+        self.remaining = self.duration if self.duration_from_soc else self.round.remaining(self.duration)
+        if self.round.charged != charged_before:
+            self._save()
 
         settings = self.settings
         if settings.get(SET_DEADLINE_ENABLED):
@@ -355,7 +379,7 @@ class SimpleChargeCoordinator(DataUpdateCoordinator[Plan]):
             PlanInput(
                 now=now,
                 prices=self.prices,
-                duration=self.duration,
+                duration=self.remaining,
                 forecast=self.forecast,
                 max_price=max_price if max_price > 0 else None,
                 relative_limit_pct=relative if relative > 0 else None,
