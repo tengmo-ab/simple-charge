@@ -25,7 +25,9 @@ charge and why.
    calculated from the car's level and your target instead.
    A fixed time is per round: time already charged counts, so 2 h means 2 h in
    total. A round ends after 6 h without charging, and the next one starts again
-   with the full time.
+   with the full time. With a *charger status sensor* (optional) the time only
+   counts while a car is plugged in, plugging in starts a new round at once, and
+   a car that reports it is full ends the round.
 2. **Cheap enough?** A slot may be used if it is at or below both limits you
    turned on:
    - **Max price** – a fixed cap (0 = off).
@@ -34,6 +36,8 @@ charge and why.
      last days' prices.
 3. **Cheapest first.** Among the known future slots (today + tomorrow once the
    day-ahead prices are out) it picks the cheapest until the charging time is covered.
+   If one unbroken block costs almost the same (by default at most 1 % of the
+   reference price more on average), the block wins: fewer starts and stops.
 4. **Worth waiting?** *(optional)* If you have a price forecast for the coming
    days, forecast slots compete too, made 15 % more expensive as a safety margin.
    If a later day is clearly cheaper, Simple Charge waits. It never charges on a
@@ -85,7 +89,7 @@ Manual install: copy `custom_components/simple_charge` into your
 | Prices | One or more price sensors with today's/tomorrow's prices. Optional forecast sensors and an optional reference average sensor. |
 | Charger | How to start/stop charging: a **switch**, a **mode select** (one option charges, one stops), your own **start/stop scripts**, or **only plan** (use the *Charge now* sensor in your own automations). |
 | Charger entities | The switch/select/scripts, plus an optional *current limiter switch* that is turned off while charging. |
-| Fine tuning | Hysteresis, forecast margin, max wait, battery level + battery size + charger power, optional Garo schedule. |
+| Fine tuning | Hysteresis, forecast margin, max wait, prefer one block, charger status sensor (car plugged in), battery level + battery size + charger power, optional Garo schedule. |
 
 Everything can be changed later under **Configure**.
 
@@ -110,10 +114,10 @@ Prices are used in the sensor's own unit, so set the max price in that unit too.
 | --- | --- |
 | `binary_sensor.<name>_charge_now` | **On when the car should charge.** Use it in other automations if you like. Attributes: `reason`, `next_start`. |
 | `sensor.<name>_plan` | Planned charging in plain text, e.g. `5/11 23:15–00:00, 6/11 02:00–03:00`. Attributes: `slots`, `forecast_slots` (what it waits for), average price, price limit. |
-| `sensor.<name>_status` | Why: charging, scheduled, waiting for a cheaper forecast, too expensive, paused, … |
+| `sensor.<name>_status` | Why: charging, scheduled, waiting for a cheaper forecast, too expensive, no car plugged in, paused, … |
 | `sensor.<name>_next_start` | When the next (or current) charging block starts. |
 | `sensor.<name>_price_limit` / `_reference_price` | The limit in use and the reference average. |
-| `sensor.<name>_needed_charging_time` | Hours needed (fixed, or from battery level). |
+| `sensor.<name>_needed_charging_time` | Hours still needed in this round (fixed, or from battery level). Attributes: `car_connected`, `car_full`. |
 | `sensor.<name>_charger_command` | Diagnostic: last command and whether the charger confirmed it. |
 | `select.<name>_mode` | **Smart** (cheapest prices), **Charge now** (always on), **Paused** (hands off). |
 | `switch.<name>_control_charger` | Off = plan only, never touch the charger. |
@@ -200,7 +204,6 @@ Version 1 of this idea was a template `binary_sensor` plus two automations. To m
 
 - Several cars (which car is plugged in) with their own battery size and target.
 - Charging power from the charger itself to fine-tune the needed time.
-- Optional "prefer one long block" to avoid many short start/stops.
 
 ## Development
 

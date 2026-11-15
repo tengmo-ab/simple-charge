@@ -1,5 +1,23 @@
 # Changelog
 
+## 2.4.0 – 2026-11-15
+
+- **New: charger status sensor (car plugged in).** Optional, under *Fine tuning*.
+  Before, the fixed charging time was counted down whenever *Charge now* was on,
+  also on an empty outlet: the cheap night was "used up" and a car plugged in
+  the next morning got nothing. With a status sensor (for Garo: `sensor.garo_status`):
+  - charging time only counts while a car is plugged in,
+  - plugging in starts a new round at once and the plan is made again,
+  - a car that reports it is full ends the round, so nothing more is planned
+    until it is plugged in again (or the usual 6 h pause has passed),
+  - *Charge now* stays off in a cheap slot without a car; the status then says
+    *No car plugged in*. The plan (and the Garo schedule) is still shown.
+- **New: prefer one block.** When one unbroken block costs almost the same as the
+  scattered cheapest slots (default: at most 1 % of the reference price more on
+  average), the block is used. Fewer starts and stops for the car and the charger.
+  Set *Prefer one block* to 0 for the old behaviour.
+- New attributes `car_connected` (plan and needed charging time) and `car_full`.
+
 ## 2.3.0 – 2026-11-07
 
 - **Fix:** a fixed charging time is now per round. Time already charged is booked and

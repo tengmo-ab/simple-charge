@@ -7,6 +7,7 @@ import logging
 from typing import Any
 
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import STATE_UNAVAILABLE, STATE_UNKNOWN
 from homeassistant.core import Event, EventStateChangedData, HomeAssistant, callback
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.event import (
@@ -20,8 +21,11 @@ from homeassistant.util import dt as dt_util
 from .charger import ChargerController
 from .const import (
     CONF_BATTERY_KWH,
+    CONF_BLOCK_TOLERANCE,
     CONF_CHARGER_KW,
+    CONF_DISCONNECTED_STATES,
     CONF_EFFICIENCY,
+    CONF_FINISHED_STATES,
     CONF_FORECAST_ENTITIES,
     CONF_FORECAST_MARGIN,
     CONF_GARO_CHARGE_LIMIT,
@@ -33,8 +37,12 @@ from .const import (
     CONF_REFERENCE_DAYS,
     CONF_REFERENCE_ENTITY,
     CONF_SOC_ENTITY,
+    CONF_STATUS_ENTITY,
     DEADLINE_LIMITS,
+    DEFAULT_BLOCK_TOLERANCE,
+    DEFAULT_DISCONNECTED_STATES,
     DEFAULT_EFFICIENCY,
+    DEFAULT_FINISHED_STATES,
     DEFAULT_FORECAST_MARGIN,
     DEFAULT_GARO_CHARGE_LIMIT,
     DEFAULT_HYSTERESIS,
@@ -82,6 +90,11 @@ MIN_SESSION_FOR_LAST_CHARGE = timedelta(minutes=14)
 type SimpleChargeConfigEntry = ConfigEntry[SimpleChargeCoordinator]
 
 
+def _state_set(text: Any) -> frozenset[str]:
+    """'NOT_CONNECTED, off' -> {'not_connected', 'off'}."""
+    return frozenset(part.strip().lower() for part in str(text or "").split(",") if part.strip())
+
+
 class SimpleChargeCoordinator(DataUpdateCoordinator[Plan]):
     """Recalculates the plan every minute and whenever an input changes."""
 
@@ -119,6 +132,10 @@ class SimpleChargeCoordinator(DataUpdateCoordinator[Plan]):
         self.remaining: timedelta = timedelta()
         self.duration_from_soc = False
         self.round = ChargeRound()
+        # Is a car plugged in? None = no status entity, or it has no usable state.
+        self.connected: bool | None = None
+        self._disconnected_states = _state_set(self.options.get(CONF_DISCONNECTED_STATES, DEFAULT_DISCONNECTED_STATES))
+        self._finished_states = _state_set(self.options.get(CONF_FINISHED_STATES, DEFAULT_FINISHED_STATES))
         self.soc: float | None = None
         self.unit: str | None = None
 
@@ -151,6 +168,8 @@ class SimpleChargeCoordinator(DataUpdateCoordinator[Plan]):
         for key in ("last_tick", "last_charging"):
             if saved_round.get(key):
                 setattr(self.round, key, dt_util.parse_datetime(saved_round[key]))
+        self.round.connected = saved_round.get("connected")
+        self.round.finished = bool(saved_round.get("finished"))
 
     @callback
     def _data_to_store(self) -> dict[str, Any]:
@@ -163,6 +182,8 @@ class SimpleChargeCoordinator(DataUpdateCoordinator[Plan]):
                 "charged_s": round(self.round.charged.total_seconds(), 1),
                 "last_tick": self.round.last_tick.isoformat() if self.round.last_tick else None,
                 "last_charging": self.round.last_charging.isoformat() if self.round.last_charging else None,
+                "connected": self.round.connected,
+                "finished": self.round.finished,
             },
         }
 
@@ -175,7 +196,7 @@ class SimpleChargeCoordinator(DataUpdateCoordinator[Plan]):
             *self.options.get(CONF_PRICE_ENTITIES, []),
             *self.options.get(CONF_FORECAST_ENTITIES, []),
         ]
-        for key in (CONF_REFERENCE_ENTITY, CONF_SOC_ENTITY):
+        for key in (CONF_REFERENCE_ENTITY, CONF_SOC_ENTITY, CONF_STATUS_ENTITY):
             if self.options.get(key):
                 watched.append(self.options[key])
         if watched:
@@ -341,6 +362,15 @@ class SimpleChargeCoordinator(DataUpdateCoordinator[Plan]):
         else:
             self.duration = manual
 
+    def _charger_status(self) -> tuple[bool | None, bool]:
+        """(car connected, car reports full) from the optional charger status entity."""
+        entity_id = self.options.get(CONF_STATUS_ENTITY)
+        state = self.hass.states.get(entity_id) if entity_id else None
+        if state is None or state.state in (STATE_UNKNOWN, STATE_UNAVAILABLE):
+            return None, False
+        value = state.state.strip().lower()
+        return value not in self._disconnected_states, value in self._finished_states
+
     # -- the update ------------------------------------------------------------
 
     async def _async_update_data(self) -> Plan:
@@ -350,10 +380,12 @@ class SimpleChargeCoordinator(DataUpdateCoordinator[Plan]):
         self._update_duration()
         # Book the charging since the last update before planning the rest. With a
         # battery level sensor the car's level already says what is left.
-        charged_before = self.round.charged
-        self.round.advance(now, bool(self._last_charge_now))
+        # Without a car plugged in nothing is booked, and plugging in starts a new round.
+        self.connected, finished = self._charger_status()
+        round_before = (self.round.charged, self.round.connected, self.round.finished)
+        self.round.advance(now, bool(self._last_charge_now), self.connected, finished)
         self.remaining = self.duration if self.duration_from_soc else self.round.remaining(self.duration)
-        if self.round.charged != charged_before:
+        if (self.round.charged, self.round.connected, self.round.finished) != round_before:
             self._save()
 
         settings = self.settings
@@ -375,6 +407,10 @@ class SimpleChargeCoordinator(DataUpdateCoordinator[Plan]):
 
         max_price = float(settings.get(SET_MAX_PRICE) or 0)
         relative = float(settings.get(SET_RELATIVE_LIMIT) or 0)
+        # The block tolerance is a share of the reference price, so it means the
+        # same whatever unit the prices are in.
+        typical_price = self.reference_price if self.reference_price is not None else average(self.prices)
+        block_pct = float(self.options.get(CONF_BLOCK_TOLERANCE, DEFAULT_BLOCK_TOLERANCE))
         plan = make_plan(
             PlanInput(
                 now=now,
@@ -391,8 +427,13 @@ class SimpleChargeCoordinator(DataUpdateCoordinator[Plan]):
                 hysteresis_pct=float(self.options.get(CONF_HYSTERESIS, DEFAULT_HYSTERESIS)),
                 forecast_margin_pct=float(self.options.get(CONF_FORECAST_MARGIN, DEFAULT_FORECAST_MARGIN)),
                 use_forecast=bool(settings.get(SET_USE_FORECAST)) and not waited_too_long,
+                block_tolerance=max(typical_price or 0.0, 0.0) * block_pct / 100.0,
             )
         )
+        if self.connected is False and plan.reason is Reason.CHARGING:
+            # A cheap slot, but no car to charge. The plan stays as it is.
+            plan.charge_now = False
+            plan.reason = Reason.NOT_CONNECTED
 
         mode = settings.get(SET_MODE)
         if mode == MODE_PAUSED:

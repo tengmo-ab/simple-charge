@@ -46,12 +46,16 @@
       },
       "advanced": {
         "title": "Finjustering (valfritt)",
-        "description": "Standardvärdena passar de flesta. Batterinivå och Garo-schema är valfria.",
+        "description": "Standardvärdena passar de flesta. Laddboxstatus, batterinivå och Garo-schema är valfria.",
         "data": {
           "hysteresis_pct": "Hysteres",
           "forecast_margin_pct": "Säkerhetsmarginal för prognos",
           "max_wait_hours": "Vänta aldrig längre än",
           "reference_days": "Dagar i eget referenssnitt",
+          "block_tolerance_pct": "Föredra ett sammanhängande block",
+          "status_entity": "Laddboxens statussensor (bil inkopplad)",
+          "disconnected_states": "Lägen som betyder att ingen bil är inkopplad",
+          "finished_states": "Lägen som betyder att bilen är full",
           "soc_entity": "Bilens batterinivå-sensor",
           "battery_kwh": "Användbar batteristorlek",
           "charger_kw": "Laddeffekt",
@@ -64,6 +68,10 @@
           "hysteresis_pct": "En pågående laddtid får kosta så här mycket mer än gränsen innan den avbryts.",
           "forecast_margin_pct": "Prognospriser görs så här mycket dyrare innan jämförelsen, så bara en tydligt billigare dag får den att vänta.",
           "max_wait_hours": "Efter så här lång tid utan laddning ignoreras prognosen och de billigaste kända tiderna används.",
+          "block_tolerance_pct": "Ett sammanhängande block används i stället för utspridda tider när dess snittpris är högst så här stor andel av referenspriset dyrare. 0 = alltid de billigaste tiderna.",
+          "status_entity": "Valfri. Med den räknas laddtid bara när en bil är inkopplad, en ny runda startar direkt vid inkoppling och en full bil avslutar rundan. För Garo: statussensorn.",
+          "disconnected_states": "Kommaseparerade, stora eller små bokstäver spelar ingen roll. Garo: NOT_CONNECTED. En binär kontaktsensor: off.",
+          "finished_states": "Kommaseparerade. Garo: CHARGING_FINISHED. Lämna tomt för att inte använda det.",
           "soc_entity": "Med batterinivå, storlek och effekt ifyllda räknas laddtiden från målnivån i stället för den fasta tiden.",
           "garo_schedule_entity": "Skriver planen till Garo-boxens eget schema (garo_wallbox-integrationen) så den laddar även om wifi tappas. Simple Charge äger då schemat."
         }
@@ -124,12 +132,16 @@
       },
       "advanced": {
         "title": "Finjustering (valfritt)",
-        "description": "Standardvärdena passar de flesta. Batterinivå och Garo-schema är valfria.",
+        "description": "Standardvärdena passar de flesta. Laddboxstatus, batterinivå och Garo-schema är valfria.",
         "data": {
           "hysteresis_pct": "Hysteres",
           "forecast_margin_pct": "Säkerhetsmarginal för prognos",
           "max_wait_hours": "Vänta aldrig längre än",
           "reference_days": "Dagar i eget referenssnitt",
+          "block_tolerance_pct": "Föredra ett sammanhängande block",
+          "status_entity": "Laddboxens statussensor (bil inkopplad)",
+          "disconnected_states": "Lägen som betyder att ingen bil är inkopplad",
+          "finished_states": "Lägen som betyder att bilen är full",
           "soc_entity": "Bilens batterinivå-sensor",
           "battery_kwh": "Användbar batteristorlek",
           "charger_kw": "Laddeffekt",
@@ -142,6 +154,10 @@
           "hysteresis_pct": "En pågående laddtid får kosta så här mycket mer än gränsen innan den avbryts.",
           "forecast_margin_pct": "Prognospriser görs så här mycket dyrare innan jämförelsen, så bara en tydligt billigare dag får den att vänta.",
           "max_wait_hours": "Efter så här lång tid utan laddning ignoreras prognosen och de billigaste kända tiderna används.",
+          "block_tolerance_pct": "Ett sammanhängande block används i stället för utspridda tider när dess snittpris är högst så här stor andel av referenspriset dyrare. 0 = alltid de billigaste tiderna.",
+          "status_entity": "Valfri. Med den räknas laddtid bara när en bil är inkopplad, en ny runda startar direkt vid inkoppling och en full bil avslutar rundan. För Garo: statussensorn.",
+          "disconnected_states": "Kommaseparerade, stora eller små bokstäver spelar ingen roll. Garo: NOT_CONNECTED. En binär kontaktsensor: off.",
+          "finished_states": "Kommaseparerade. Garo: CHARGING_FINISHED. Lämna tomt för att inte använda det.",
           "soc_entity": "Med batterinivå, storlek och effekt ifyllda räknas laddtiden från målnivån i stället för den fasta tiden.",
           "garo_schedule_entity": "Skriver planen till Garo-boxens eget schema (garo_wallbox-integrationen) så den laddar även om wifi tappas. Simple Charge äger då schemat."
         }
@@ -192,7 +208,8 @@
           "waiting_for_forecast": "Väntar på billigare prognos",
           "too_expensive": "För dyrt",
           "no_prices": "Inga priser",
-          "nothing_needed": "Inget behov"
+          "nothing_needed": "Inget behov",
+          "not_connected": "Ingen bil inkopplad"
         }
       },
       "next_start": {

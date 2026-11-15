@@ -130,3 +130,59 @@ def test_one_step_is_capped_after_a_restart():
 def test_done_round_needs_nothing_more():
     rnd = ChargeRound(charged=timedelta(hours=2) - timedelta(seconds=20))
     assert rnd.remaining(timedelta(hours=2)) == timedelta()
+
+
+def test_nothing_is_booked_without_a_car():
+    # Seen live 15 Nov 2026: the cheap night slots "charged" an empty outlet and the
+    # round was used up before the car was plugged in at 08:26.
+    rnd = ChargeRound()
+    t = START
+    rnd.advance(t, False, connected=False)
+    for _ in range(120):
+        t += timedelta(minutes=1)
+        rnd.advance(t, True, connected=False)
+    assert rnd.charged == timedelta()
+    assert rnd.remaining(timedelta(hours=2)) == timedelta(hours=2)
+
+
+def test_plugging_in_starts_a_new_round():
+    rnd = ChargeRound()
+    t = START
+    rnd.advance(t, False, connected=True)
+    for _ in range(120):
+        t += timedelta(minutes=1)
+        rnd.advance(t, True, connected=True)
+    assert rnd.remaining(timedelta(hours=2)) == timedelta()
+    rnd.advance(t + timedelta(minutes=1), False, connected=False)  # drives away
+    assert rnd.remaining(timedelta(hours=2)) == timedelta()
+    rnd.advance(t + timedelta(minutes=30), False, connected=True)  # back again
+    assert rnd.remaining(timedelta(hours=2)) == timedelta(hours=2)
+
+
+def test_unknown_status_changes_nothing():
+    rnd = ChargeRound()
+    t = START
+    rnd.advance(t, False, connected=True)
+    for _ in range(30):
+        t += timedelta(minutes=1)
+        rnd.advance(t, True, connected=True)
+    # The charger goes offline for a while (None), then answers "connected" again.
+    rnd.advance(t + timedelta(minutes=1), False, connected=None)
+    rnd.advance(t + timedelta(minutes=2), False, connected=True)
+    assert rnd.charged == timedelta(minutes=30)
+
+
+def test_full_car_ends_the_round_until_plugged_in_again():
+    rnd = ChargeRound()
+    t = START
+    rnd.advance(t, False, connected=True)
+    rnd.advance(t + timedelta(minutes=1), True, connected=True)
+    rnd.advance(t + timedelta(minutes=2), True, connected=True, finished=True)
+    assert rnd.remaining(timedelta(hours=2)) == timedelta()
+    # A stale "finished" while not charging does not end a round.
+    other = ChargeRound()
+    other.advance(t, False, connected=True, finished=True)
+    assert other.remaining(timedelta(hours=2)) == timedelta(hours=2)
+    rnd.advance(t + timedelta(minutes=3), False, connected=False)
+    rnd.advance(t + timedelta(minutes=4), False, connected=True)
+    assert rnd.remaining(timedelta(hours=2)) == timedelta(hours=2)

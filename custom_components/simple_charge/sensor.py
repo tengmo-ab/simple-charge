@@ -80,6 +80,7 @@ def _plan_attrs(c: SimpleChargeCoordinator) -> dict[str, Any]:
         "known_prices_until": c.prices[-1].end.isoformat() if c.prices else None,
         "forecast_until": c.forecast[-1].end.isoformat() if c.forecast else None,
         "last_charge_end": c.last_charge_end.isoformat() if c.last_charge_end else None,
+        "car_connected": c.connected,
         "unit": c.unit,
     }
 
@@ -89,6 +90,8 @@ def _duration_attrs(c: SimpleChargeCoordinator) -> dict[str, Any]:
         "total_hours": round(c.duration.total_seconds() / 3600, 3),
         "charged_this_round_hours": None if c.duration_from_soc else round(c.round.charged.total_seconds() / 3600, 3),
         "round_last_charging": c.round.last_charging.isoformat() if c.round.last_charging else None,
+        "car_connected": c.connected,
+        "car_full": c.round.finished,
         "from_battery_level": c.duration_from_soc,
     }
 

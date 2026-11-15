@@ -13,7 +13,8 @@ slots are ever charged. A deadline ("ready by") only allows slots before it and
 turns the forecast off. In the default "must finish" mode it also ignores the
 price caps, so the car is done in time whatever it costs; in "within price
 limits" mode the caps still apply and the car may end up only partly charged.
-A force window always charges.
+A force window always charges. When one unbroken block costs almost the same as
+the scattered cheapest slots, the block is used instead (fewer starts and stops).
 """
 
 from __future__ import annotations
@@ -35,6 +36,7 @@ class Reason(StrEnum):
     TOO_EXPENSIVE = "too_expensive"
     NO_PRICES = "no_prices"
     NOTHING_NEEDED = "nothing_needed"
+    NOT_CONNECTED = "not_connected"
 
 
 @dataclass(frozen=True, slots=True)
@@ -73,6 +75,9 @@ class PlanInput:
     forecast_margin_pct: float = 15.0
     use_forecast: bool = True
     forecast_horizon: timedelta = timedelta(days=2)
+    # One unbroken block may cost this much more per unit (average price, in the
+    # price unit) than the scattered cheapest slots. 0 = always the cheapest slots.
+    block_tolerance: float = 0.0
 
 
 @dataclass(slots=True)
@@ -136,6 +141,53 @@ def _pick_cheapest(candidates: list[PriceSlot], needed: timedelta) -> list[Price
     return chosen
 
 
+def _average_price(slots: list[PriceSlot]) -> float:
+    total = sum(s.length.total_seconds() for s in slots)
+    return sum(s.price * s.length.total_seconds() for s in slots) / total if total else 0.0
+
+
+def _prefer_block(
+    chosen: list[PriceSlot],
+    candidates: list[PriceSlot],
+    needed: timedelta,
+    tolerance: float,
+    now: datetime,
+    keep_running: bool,
+) -> list[PriceSlot]:
+    """Swap scattered slots for one unbroken block when it costs almost the same.
+
+    The block may be at most ``tolerance`` more expensive per unit on average.
+    While charging, a block that continues the running slot is preferred, so the
+    choice does not jump around from quarter to quarter.
+    """
+    if tolerance <= 0 or len(chosen) < 2:
+        return chosen
+    if len(merge_ranges(chosen)) == 1:
+        return chosen
+    limit = _average_price(chosen) + tolerance
+    ordered = sorted(candidates, key=lambda s: s.start)
+    best: tuple[tuple[bool, float, datetime], list[PriceSlot]] | None = None
+    for first in range(len(ordered)):
+        block: list[PriceSlot] = []
+        covered = timedelta()
+        for slot in ordered[first:]:
+            if block and slot.start != block[-1].end:
+                break
+            block.append(slot)
+            covered += slot.length
+            if covered >= needed:
+                break
+        if covered < needed:
+            continue
+        price = _average_price(block)
+        if price > limit:
+            continue
+        key = (not (keep_running and block[0].contains(now)), price, block[0].start)
+        if best is None or key < best[0]:
+            best = (key, block)
+    return best[1] if best else chosen
+
+
 def make_plan(data: PlanInput) -> Plan:
     """Decide which slots to charge in and whether to charge right now."""
     now = data.now
@@ -162,6 +214,7 @@ def make_plan(data: PlanInput) -> Plan:
             # apply only in the "within price limits" mode.
             candidates = [s for s in future if s.start < data.deadline and (not data.deadline_respects_limits or cheap_enough(s))]
             chosen = _pick_cheapest(candidates, data.duration)
+            chosen = _prefer_block(chosen, candidates, data.duration, data.block_tolerance, now, data.currently_charging)
             plan.slots = sorted(chosen, key=lambda s: s.start)
         else:
             candidates = [s for s in future if cheap_enough(s)]
@@ -179,6 +232,8 @@ def make_plan(data: PlanInput) -> Plan:
                         pool.append(pessimistic)
 
             chosen = _pick_cheapest(pool, data.duration)
+            if not any(s.forecast for s in chosen):
+                chosen = _prefer_block(chosen, candidates, data.duration, data.block_tolerance, now, data.currently_charging)
             plan.slots = sorted((s for s in chosen if not s.forecast), key=lambda s: s.start)
             # Report forecast slots with their real forecast price, not the padded one.
             original = {f.start: f for f in data.forecast}
@@ -222,14 +277,29 @@ class ChargeRound:
     The time is booked as it happens. A round ends when nothing has charged for
     ``ROUND_RESET_GAP``; the next round then starts with the full time again. One
     booking step is capped so a restart or a stalled update cannot add hours.
+
+    When the charger can tell whether a car is plugged in (``connected``; None =
+    unknown), time is only booked with a car connected, plugging in starts a new
+    round at once, and a car that reports it is full ends the round early.
     """
 
     charged: timedelta = field(default_factory=timedelta)
     last_tick: datetime | None = None
     last_charging: datetime | None = None
+    connected: bool | None = None
+    finished: bool = False
 
-    def advance(self, now: datetime, charging: bool) -> None:
+    def advance(self, now: datetime, charging: bool, connected: bool | None = None, finished: bool = False) -> None:
         """Book the time since the previous call. ``charging`` is the decision made then."""
+        if connected and self.connected is False:
+            # The car was just plugged in: it needs a full charge again.
+            self.reset()
+        if connected is not None:
+            self.connected = connected
+        if connected is False:
+            charging = False
+        if charging and finished:
+            self.finished = True
         if charging:
             if self.last_tick is not None and now > self.last_tick:
                 self.charged += min(now - self.last_tick, ROUND_MAX_STEP)
@@ -241,8 +311,11 @@ class ChargeRound:
     def reset(self) -> None:
         self.charged = timedelta()
         self.last_charging = None
+        self.finished = False
 
     def remaining(self, duration: timedelta) -> timedelta:
+        if self.finished:
+            return timedelta()
         left = duration - self.charged
         return left if left >= ROUND_MIN_REMAINING else timedelta()
 

@@ -200,3 +200,49 @@ def test_deadline_within_limits_too_expensive_and_no_forecast():
     )
     assert plan.slots == [] and plan.waiting_for == []
     assert plan.reason is Reason.TOO_EXPENSIVE
+
+
+# Real SE3 quarter prices (öre/kWh) 16 Nov 2026 00:00-06:00: flat around 80 with
+# the eight cheapest quarters spread over five blocks.
+FLAT_NIGHT = [
+    99.8, 96.2, 90.6, 89.4, 91.7, 85.8, 82.1, 80.8, 79.5, 77.9, 81.4, 84.4,
+    81.7, 80.6, 80.9, 80.3, 77.9, 81.0, 80.6, 80.7, 83.7, 88.3, 92.5, 101.5,
+]  # fmt: skip
+
+
+def test_block_is_preferred_when_it_costs_almost_the_same():
+    prices = quarters(DAY, FLAT_NIGHT)
+    scattered = make_plan(PlanInput(now=DAY, prices=prices, duration=timedelta(hours=2)))
+    assert len(merge_ranges(scattered.slots)) > 1
+    block = make_plan(PlanInput(now=DAY, prices=prices, duration=timedelta(hours=2), block_tolerance=2.7))
+    assert merge_ranges(block.slots) == [(DAY + 12 * Q, DAY + 20 * Q)]
+    assert block.average_price - scattered.average_price < 2.7
+
+
+def test_block_is_not_used_when_it_costs_too_much():
+    prices = quarters(DAY, day_prices({8: 10, 9: 11, 40: 12, 41: 13}))
+    plan = make_plan(PlanInput(now=DAY, prices=prices, duration=timedelta(hours=1), block_tolerance=5))
+    assert [s.price for s in plan.slots] == [10, 11, 12, 13]
+
+
+def test_block_stays_put_while_charging():
+    prices = quarters(DAY, FLAT_NIGHT)
+    charged: list[int] = []
+    left = timedelta(hours=2)
+    charging = False
+    for index in range(len(FLAT_NIGHT)):
+        now = DAY + index * Q
+        plan = make_plan(PlanInput(now=now, prices=prices, duration=left, block_tolerance=2.7, currently_charging=charging))
+        charging = plan.charge_now
+        if charging:
+            charged.append(index)
+            left -= Q
+    assert charged == list(range(12, 20))
+
+
+def test_block_never_replaces_waiting_for_a_forecast():
+    prices = quarters(DAY, day_prices({8: 60, 40: 61}, base=100))
+    forecast = quarters(DAY + timedelta(days=1), day_prices(base=10), forecast=True)
+    plan = make_plan(PlanInput(now=DAY, prices=prices, duration=timedelta(minutes=30), forecast=forecast, block_tolerance=50))
+    assert plan.slots == []
+    assert plan.reason is Reason.WAITING_FOR_FORECAST

@@ -33,6 +33,11 @@ CONF_BATTERY_KWH: Final = "battery_kwh"
 CONF_CHARGER_KW: Final = "charger_kw"
 CONF_EFFICIENCY: Final = "efficiency_pct"
 
+CONF_STATUS_ENTITY: Final = "status_entity"
+CONF_DISCONNECTED_STATES: Final = "disconnected_states"
+CONF_FINISHED_STATES: Final = "finished_states"
+CONF_BLOCK_TOLERANCE: Final = "block_tolerance_pct"
+
 CONF_GARO_SCHEDULE_ENTITY: Final = "garo_schedule_entity"
 CONF_GARO_CHARGE_LIMIT: Final = "garo_charge_limit"
 
@@ -48,6 +53,9 @@ DEFAULT_MAX_WAIT_HOURS: Final = 72.0
 DEFAULT_REFERENCE_DAYS: Final = 7
 DEFAULT_EFFICIENCY: Final = 90.0
 DEFAULT_GARO_CHARGE_LIMIT: Final = 16
+DEFAULT_DISCONNECTED_STATES: Final = "NOT_CONNECTED, off, disconnected, unplugged"
+DEFAULT_FINISHED_STATES: Final = "CHARGING_FINISHED"
+DEFAULT_BLOCK_TOLERANCE: Final = 1.0
 
 # Runtime settings (changed through the integration's own entities) ---------
 SET_MODE: Final = "mode"

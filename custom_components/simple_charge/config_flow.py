@@ -21,9 +21,12 @@ import voluptuous as vol
 
 from .const import (
     CONF_BATTERY_KWH,
+    CONF_BLOCK_TOLERANCE,
     CONF_CHARGER_KW,
     CONF_CONTROL_TYPE,
+    CONF_DISCONNECTED_STATES,
     CONF_EFFICIENCY,
+    CONF_FINISHED_STATES,
     CONF_FORECAST_ENTITIES,
     CONF_FORECAST_MARGIN,
     CONF_GARO_CHARGE_LIMIT,
@@ -41,6 +44,7 @@ from .const import (
     CONF_SELECT_ON,
     CONF_SOC_ENTITY,
     CONF_START_SCRIPT,
+    CONF_STATUS_ENTITY,
     CONF_STOP_SCRIPT,
     CONF_SWITCH_ENTITY,
     CONTROL_NONE,
@@ -48,7 +52,10 @@ from .const import (
     CONTROL_SELECT,
     CONTROL_SWITCH,
     CONTROL_TYPES,
+    DEFAULT_BLOCK_TOLERANCE,
+    DEFAULT_DISCONNECTED_STATES,
     DEFAULT_EFFICIENCY,
+    DEFAULT_FINISHED_STATES,
     DEFAULT_FORECAST_MARGIN,
     DEFAULT_GARO_CHARGE_LIMIT,
     DEFAULT_HYSTERESIS,
@@ -70,6 +77,7 @@ CHARGER_KEYS = (
 )
 OPTIONAL_PRICE_KEYS = (CONF_FORECAST_ENTITIES, CONF_REFERENCE_ENTITY)
 OPTIONAL_ADVANCED_KEYS = (
+    CONF_STATUS_ENTITY,
     CONF_SOC_ENTITY,
     CONF_BATTERY_KWH,
     CONF_CHARGER_KW,
@@ -258,6 +266,9 @@ class _Steps:
                 if user_input.get(key) in (None, "", 0):
                     self._data.pop(key, None)
                     user_input.pop(key, None)
+            # An emptied text field is left out of the input: store it as "no states".
+            for key in (CONF_DISCONNECTED_STATES, CONF_FINISHED_STATES):
+                user_input.setdefault(key, "")
             self._data.update(user_input)
             return self._finish()
 
@@ -273,6 +284,20 @@ class _Steps:
             vol.Required(CONF_REFERENCE_DAYS, default=data.get(CONF_REFERENCE_DAYS, DEFAULT_REFERENCE_DAYS)): _number(
                 1, 30, 1, "d"
             ),
+            vol.Required(CONF_BLOCK_TOLERANCE, default=data.get(CONF_BLOCK_TOLERANCE, DEFAULT_BLOCK_TOLERANCE)): _number(
+                0, 20, 0.1, "%"
+            ),
+            vol.Optional(CONF_STATUS_ENTITY, description=_suggest(data, CONF_STATUS_ENTITY)): _entity(
+                ["sensor", "binary_sensor", "input_select", "input_boolean"]
+            ),
+            vol.Optional(
+                CONF_DISCONNECTED_STATES,
+                description={"suggested_value": data.get(CONF_DISCONNECTED_STATES, DEFAULT_DISCONNECTED_STATES)},
+            ): str,
+            vol.Optional(
+                CONF_FINISHED_STATES,
+                description={"suggested_value": data.get(CONF_FINISHED_STATES, DEFAULT_FINISHED_STATES)},
+            ): str,
             vol.Optional(CONF_SOC_ENTITY, description=_suggest(data, CONF_SOC_ENTITY)): _entity(
                 ["sensor", "input_number", "number"]
             ),

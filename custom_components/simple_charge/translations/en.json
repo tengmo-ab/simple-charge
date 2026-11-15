@@ -46,12 +46,16 @@
       },
       "advanced": {
         "title": "Fine tuning (optional)",
-        "description": "The defaults work for most people. Battery level and Garo schedule are optional.",
+        "description": "The defaults work for most people. Charger status, battery level and Garo schedule are optional.",
         "data": {
           "hysteresis_pct": "Hysteresis",
           "forecast_margin_pct": "Forecast safety margin",
           "max_wait_hours": "Never wait longer than",
           "reference_days": "Days in own reference average",
+          "block_tolerance_pct": "Prefer one block",
+          "status_entity": "Charger status sensor (car plugged in)",
+          "disconnected_states": "States that mean no car is plugged in",
+          "finished_states": "States that mean the car is full",
           "soc_entity": "Car battery level sensor",
           "battery_kwh": "Usable battery size",
           "charger_kw": "Charging power",
@@ -64,6 +68,10 @@
           "hysteresis_pct": "A slot that is already charging may cost this much more than the limit before it stops.",
           "forecast_margin_pct": "Forecast prices are made this much more expensive before they are compared, so only a clearly cheaper day makes it wait.",
           "max_wait_hours": "After this long without a charge the forecast is ignored and the cheapest known slots are used.",
+          "block_tolerance_pct": "One unbroken block is used instead of scattered slots when its average price is at most this share of the reference price higher. 0 = always the cheapest slots.",
+          "status_entity": "Optional. With it, charging time only counts while a car is plugged in, plugging in starts a new round at once, and a full car ends the round. For Garo: the status sensor.",
+          "disconnected_states": "Comma separated, upper or lower case does not matter. Garo: NOT_CONNECTED. A plug binary sensor: off.",
+          "finished_states": "Comma separated. Garo: CHARGING_FINISHED. Leave empty to not use it.",
           "soc_entity": "With battery level, size and power set, the charging time is calculated from the target level instead of the fixed duration.",
           "garo_schedule_entity": "Writes the plan into the Garo box's own schedule (garo_wallbox integration), so it still charges when Wi-Fi drops. Simple Charge then owns that schedule."
         }
@@ -124,12 +132,16 @@
       },
       "advanced": {
         "title": "Fine tuning (optional)",
-        "description": "The defaults work for most people. Battery level and Garo schedule are optional.",
+        "description": "The defaults work for most people. Charger status, battery level and Garo schedule are optional.",
         "data": {
           "hysteresis_pct": "Hysteresis",
           "forecast_margin_pct": "Forecast safety margin",
           "max_wait_hours": "Never wait longer than",
           "reference_days": "Days in own reference average",
+          "block_tolerance_pct": "Prefer one block",
+          "status_entity": "Charger status sensor (car plugged in)",
+          "disconnected_states": "States that mean no car is plugged in",
+          "finished_states": "States that mean the car is full",
           "soc_entity": "Car battery level sensor",
           "battery_kwh": "Usable battery size",
           "charger_kw": "Charging power",
@@ -142,6 +154,10 @@
           "hysteresis_pct": "A slot that is already charging may cost this much more than the limit before it stops.",
           "forecast_margin_pct": "Forecast prices are made this much more expensive before they are compared, so only a clearly cheaper day makes it wait.",
           "max_wait_hours": "After this long without a charge the forecast is ignored and the cheapest known slots are used.",
+          "block_tolerance_pct": "One unbroken block is used instead of scattered slots when its average price is at most this share of the reference price higher. 0 = always the cheapest slots.",
+          "status_entity": "Optional. With it, charging time only counts while a car is plugged in, plugging in starts a new round at once, and a full car ends the round. For Garo: the status sensor.",
+          "disconnected_states": "Comma separated, upper or lower case does not matter. Garo: NOT_CONNECTED. A plug binary sensor: off.",
+          "finished_states": "Comma separated. Garo: CHARGING_FINISHED. Leave empty to not use it.",
           "soc_entity": "With battery level, size and power set, the charging time is calculated from the target level instead of the fixed duration.",
           "garo_schedule_entity": "Writes the plan into the Garo box's own schedule (garo_wallbox integration), so it still charges when Wi-Fi drops. Simple Charge then owns that schedule."
         }
@@ -192,7 +208,8 @@
           "waiting_for_forecast": "Waiting for cheaper forecast",
           "too_expensive": "Too expensive",
           "no_prices": "No prices",
-          "nothing_needed": "Nothing to charge"
+          "nothing_needed": "Nothing to charge",
+          "not_connected": "No car plugged in"
         }
       },
       "next_start": {
